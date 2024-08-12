@@ -1,0 +1,22 @@
+{
+    "name": "search_music",
+    "description": "Find appropriate music",
+    "strict": false,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "song_name": {
+          "type": "string",
+          "description": "The name of a song to search"
+        },
+        "author": {
+          "type": "string",
+          "description": "Author or band name"
+        }
+      },
+      "required": [
+        "song_name"
+      ],
+      "additionalProperties": false
+    }
+  }
