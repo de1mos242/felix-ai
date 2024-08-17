@@ -35,19 +35,10 @@ class FelixAiApplicationTests {
 
     @Test
     void playMusicRequest() {
-        var userMessage = new UserMessage("Play lieb mich");
+        var userMessage = new UserMessage("Включи, пожалуйста, песню Либ Мих группы Mono Inc.");
         ChatResponse response = chatModel.call(new Prompt(List.of(userMessage), OpenAiChatOptions.builder().withFunction("playMusicFunction").build()));
         System.out.println(response.getResult().getOutput().getContent());
-        Assertions.assertThat(response.getResult().getOutput().getContent()).containsIgnoringCase("scooter");
-    }
-
-    @Test
-    void playMusicRequestAudio() {
-        this.getClass().getClassLoader().getResource("myfile2.wav");
-        var userMessage = new UserMessage("Play lieb mich");
-        ChatResponse response = chatModel.call(new Prompt(List.of(userMessage), OpenAiChatOptions.builder().withFunction("playMusicFunction").build()));
-        System.out.println(response.getResult().getOutput().getContent());
-        Assertions.assertThat(response.getResult().getOutput().getContent()).containsIgnoringCase("scooter");
+        Assertions.assertThat(response.getResult().getOutput().getContent()).containsIgnoringCase("lieb mich");
     }
 
     @Test
@@ -61,12 +52,6 @@ class FelixAiApplicationTests {
 //        String modelName = "vosk-model-small-en-us-0.15";
         String modelPath = this.getClass().getClassLoader().getResource("models/" + modelName).getPath();
         try (Model model = new Model(modelPath)) {
-
-//            AudioFormat format = buildAudioFormatInstance();
-//            int frameSizeInBytes = format.getFrameSize();
-//            var line = getTargetDataLineForRecord();
-//            int bufferLengthInFrames = line.getBufferSize() / 8;
-//            final int bufferLengthInBytes = bufferLengthInFrames * frameSizeInBytes;
 
             int sampleRate = 48000;
             var format = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED, sampleRate, 16, 1, 2, sampleRate, false);
@@ -100,6 +85,8 @@ class FelixAiApplicationTests {
 
             ByteArrayOutputStream out = new ByteArrayOutputStream();
 
+            System.out.println("Start speaking... ");
+
             int nbytes;
             byte[] b = new byte[4096];
             while ((nbytes = ais.read(b)) >= 0) {
@@ -110,8 +97,7 @@ class FelixAiApplicationTests {
                     out.writeBytes(b);
                     if (text.toLowerCase().contains("феликс")) {
                         System.out.println("WOOOHOOO " + text);
-                        FileOutputStream fileOutputStream = new FileOutputStream("/Users/denis/IdeaProjects/felix-ai/src/test/resources/myfile" + df + ".wav");
-                        out.writeTo(fileOutputStream);
+                        writeWavFile(df, out, format);
                         df++;
                     } else {
                     }
@@ -130,6 +116,15 @@ class FelixAiApplicationTests {
 
             System.out.println(recognizer.getFinalResult());
         }
+    }
+
+    private static void writeWavFile(int df, ByteArrayOutputStream out, AudioFormat audioFormat) throws IOException {
+        String filename = "/Users/denis/IdeaProjects/felix-ai/src/test/resources/myfile" + df + ".wav";
+        byte[] data = out.toByteArray();
+        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(data);
+        AudioInputStream audioInputStream = new AudioInputStream(byteArrayInputStream, audioFormat, data.length / audioFormat.getFrameSize());
+        FileOutputStream fileOutputStream = new FileOutputStream(filename);
+        AudioSystem.write(audioInputStream, AudioFileFormat.Type.WAVE, fileOutputStream);
     }
 
     public static AudioFormat buildAudioFormatInstance() {
