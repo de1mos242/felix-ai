@@ -8,10 +8,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
-import org.springframework.ai.model.function.FunctionCallbackWrapper;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
-import org.springframework.ai.openai.audio.transcription.AudioTranscriptionPrompt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -21,7 +19,10 @@ import org.vosk.Model;
 import org.vosk.Recognizer;
 
 import javax.sound.sampled.*;
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.List;
 
 @ActiveProfiles({"local", "test", "default"})
@@ -35,7 +36,8 @@ class FelixAiApplicationTests {
 
     @Test
     void playMusicRequest() {
-        var userMessage = new UserMessage("Включи, пожалуйста, песню Либ Мих группы Mono Inc.");
+        var userMessage = new UserMessage("Включи, пожалуйста, песню принцесс оф зе дарк группы Mono Inc.");
+//        var userMessage = new UserMessage("Включи, пожалуйста, песню Либ Мих группы Mono Inc.");
         ChatResponse response = chatModel.call(new Prompt(List.of(userMessage), OpenAiChatOptions.builder().withFunction("playMusicFunction").build()));
         System.out.println(response.getResult().getOutput().getContent());
         Assertions.assertThat(response.getResult().getOutput().getContent()).containsIgnoringCase("lieb mich");
