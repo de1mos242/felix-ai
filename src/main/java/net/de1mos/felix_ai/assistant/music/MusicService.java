@@ -46,11 +46,11 @@ public class MusicService implements Function<MusicService.PlayMusicRequest, Mus
         spotifyApi.setAccessToken(clientCredentials.getAccessToken());
 
 
-        var searchTracks = spotifyApi.searchTracks(playMusicRequest.searchString).limit(3).build();
+        var searchTracks = spotifyApi.searchTracks(playMusicRequest.searchString).limit(10).build();
         Paging<Track> trackPaging = searchTracks.execute();
-        Arrays.stream(trackPaging.getItems()).forEach(i -> log.info("Found tracK: " + i.getName() + " from " + getArtists(i)));
+        Arrays.stream(trackPaging.getItems()).forEach(i -> log.info("Found tracK: {}", i));
 
-        var track = trackPaging.getItems()[0];
+        var track = Arrays.stream(trackPaging.getItems()).filter(t -> !t.getIsExplicit()).findFirst().orElseThrow();
         log.info("Play track: {}", track.getUri());
         spotifyClient.playTrack(track.getUri());
         return new PlayMusicResponse(track.getId(), getArtists(track), track.getName());

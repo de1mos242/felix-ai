@@ -36,7 +36,7 @@ class FelixAiApplicationTests {
 
     @Test
     void playMusicRequest() {
-        var userMessage = new UserMessage("Включи, пожалуйста, песню принцесс оф зе дарк группы Mono Inc.");
+        var userMessage = new UserMessage("включи песню секрет домой");
 //        var userMessage = new UserMessage("Включи, пожалуйста, песню Либ Мих группы Mono Inc.");
         ChatResponse response = chatModel.call(new Prompt(List.of(userMessage), OpenAiChatOptions.builder().withFunction("playMusicFunction").build()));
         System.out.println(response.getResult().getOutput().getContent());

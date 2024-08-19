@@ -3,11 +3,13 @@ package net.de1mos.felix_ai.assistant.music;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.model_objects.credentials.AuthorizationCodeCredentials;
+import se.michaelthelin.spotify.model_objects.miscellaneous.CurrentlyPlayingContext;
 import se.michaelthelin.spotify.model_objects.miscellaneous.Device;
 import se.michaelthelin.spotify.model_objects.specification.*;
 
@@ -15,6 +17,7 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class SpotifyClient {
 
@@ -44,15 +47,36 @@ public class SpotifyClient {
         var playlist = assumeFelixPlaylist(spotifyApi);
 
         var trackId = Arrays.stream(trackUrl.split(":")).reduce((a, b) -> b).orElseThrow();
-        Recommendations recommendations = spotifyApi.getRecommendations().seed_tracks(trackId).limit(10).build().execute();
-        String[] recommendationTracks = Arrays.stream(recommendations.getTracks()).map(Track::getUri).toArray(String[]::new);
+        Recommendations recommendations = spotifyApi.getRecommendations().seed_tracks(trackId).limit(20).build().execute();
+        String[] recommendationTracks = Arrays.stream(recommendations.getTracks()).filter(t -> !t.getIsExplicit()).map(Track::getUri).toArray(String[]::new);
         String[] tracks = ArrayUtils.addFirst(recommendationTracks, trackUrl);
+        log.info("current playlist1: {}", spotifyApi.getPlaylist(playlist.id).build().execute());
         spotifyApi.replacePlaylistsItems(playlist.id, tracks).build().execute();
+        log.info("current playlist2: {}", spotifyApi.getPlaylist(playlist.id).build().execute());
+
 
         var deviceId = device.getId();
         JsonObject trackOffset = new JsonObject();
         trackOffset.add("uri", new JsonPrimitive(trackUrl));
+        CurrentlyPlayingContext playingContext = spotifyApi.getInformationAboutUsersCurrentPlayback().build().execute();
+        log.info("Current playing state: {}", playingContext);
+        if (playingContext.getIs_playing()) {
+            spotifyApi.pauseUsersPlayback().device_id(deviceId).build().execute();
+        }
+        log.info("current playlist3: {}", spotifyApi.getPlaylist(playlist.id).build().execute());
+
         spotifyApi.startResumeUsersPlayback().device_id(deviceId).context_uri(playlist.uri()).offset(trackOffset).build().execute();
+        log.info("current playlist4: {}", spotifyApi.getPlaylist(playlist.id).build().execute());
+
+        CurrentlyPlayingContext playingContextAfter = spotifyApi.getInformationAboutUsersCurrentPlayback().build().execute();
+        log.info("Current playing state after run: {}", playingContext);
+        if (!playingContextAfter.getIs_playing()) {
+            spotifyApi.startResumeUsersPlayback().device_id(deviceId).context_uri(playlist.uri()).build().execute();
+        }
+        log.info("current playlist5: {}", spotifyApi.getPlaylist(playlist.id).build().execute());
+
+
+//        spotifyApi.startResumeUsersPlayback().device_id(deviceId).context_uri(playlist.uri()).build().execute();
 //        addToQueue(spotifyApi, trackUrl, deviceId);
 //        spotifyApi.skipUsersPlaybackToNextTrack().device_id(deviceId).build().execute();
 //        Arrays.stream(recommendations.getTracks()).forEach(t-> addToQueue(spotifyApi, t.getUri(), deviceId));
