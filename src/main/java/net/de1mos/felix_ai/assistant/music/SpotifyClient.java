@@ -60,7 +60,7 @@ public class SpotifyClient {
         trackOffset.add("uri", new JsonPrimitive(trackUrl));
         CurrentlyPlayingContext playingContext = spotifyApi.getInformationAboutUsersCurrentPlayback().build().execute();
         log.info("Current playing state: {}", playingContext);
-        if (playingContext.getIs_playing()) {
+        if (playingContext != null && playingContext.getIs_playing()) {
             spotifyApi.pauseUsersPlayback().device_id(deviceId).build().execute();
         }
         log.info("current playlist3: {}", spotifyApi.getPlaylist(playlist.id).build().execute());
@@ -70,7 +70,7 @@ public class SpotifyClient {
 
         CurrentlyPlayingContext playingContextAfter = spotifyApi.getInformationAboutUsersCurrentPlayback().build().execute();
         log.info("Current playing state after run: {}", playingContext);
-        if (!playingContextAfter.getIs_playing()) {
+        if (playingContextAfter != null && !playingContextAfter.getIs_playing()) {
             spotifyApi.startResumeUsersPlayback().device_id(deviceId).context_uri(playlist.uri()).build().execute();
         }
         log.info("current playlist5: {}", spotifyApi.getPlaylist(playlist.id).build().execute());
